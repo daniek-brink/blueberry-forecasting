@@ -34,3 +34,16 @@ which should return
 ```json
 {"status":{"code":200,"status":"SUCCESS!"}}
 ```
+
+For predictions you may use
+```bash
+curl --header "Content-Type: application/json"   --request POST   --data '{ 
+                "samples": [[7.0, 4.0, 7.0, 3.0, 1.0, 4.0],[10.0, 4.0, 7.0, 3.0, 5.0, 6.0]]
+          }'   http://0.0.0.0:3500/predict
+```
+and expect to receive
+```json
+{"predictions":[[5.743196487426758,22.50088882446289,39.258583068847656],[7.014736175537109,23.772428512573242,40.53012466430664]]}
+```
+one row for each sample to predict 7 days in the future. The first entry is the value of the 2.5% quantile, the middle is the mean and the last value is the 97.5% quantile.
+
