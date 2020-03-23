@@ -47,10 +47,7 @@ class PredictBlueberry(Resource):
 
         parse = reqparse.RequestParser()
         parse.add_argument('samples')
-
-        args = parse.parse_args()
-        samples = np.asarray(args['samples'])
-
+        tf.set_random_seed(10)
         samples = np.asarray(request.get_json()['samples'])
 
         with tf.Session() as new_sess:

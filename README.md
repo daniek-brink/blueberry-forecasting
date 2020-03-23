@@ -43,7 +43,7 @@ curl --header "Content-Type: application/json"   --request POST   --data '{
 ```
 and expect to receive
 ```json
-{"predictions":[[5.743196487426758,22.50088882446289,39.258583068847656],[7.014736175537109,23.772428512573242,40.53012466430664]]}
+{"predictions":[[3.717885971069336,20.47557830810547,37.2332763671875],[5.390043258666992,22.147735595703125,38.905433654785156]]}
 ```
-one row for each sample to predict 7 days in the future. The first entry is the value of the 2.5% quantile, the middle is the mean and the last value is the 97.5% quantile.
+one row for each sample to predict how many blueberries will be ready to harvest 7 days in the future. The first entry is the value of the 2.5% quantile, the middle is the mean and the last value is the 97.5% quantile.
 

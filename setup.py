@@ -4,6 +4,9 @@ from setuptools import setup, find_packages
 
 with open('requirements_pip.txt') as f:
     requirements = f.read().splitlines()
+print(requirements)
+requirements = [x for x in requirements if x[:4] != 'http']
+print(requirements)
 
 with open('README.md', 'r') as readme_file:
     readme = readme_file.read()
