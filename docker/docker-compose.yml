@@ -5,15 +5,6 @@ services:
     build:
       context: ..
       dockerfile: ./docker/Dockerfile
-      args:
-        http_proxy: $http_proxy
-        https_proxy: $https_proxy
     image: blueberry_forecasting_api
     ports:
       - 0.0.0.0:3500:3500
-  jupyter-notebook:
-    image: jupyter/minimal-notebook:latest
-    ports:
-      - 0.0.0.0:8888:8888
-    volumes:
-      - ~/notebooks:/home/jovyan

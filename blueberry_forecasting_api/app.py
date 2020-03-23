@@ -3,8 +3,6 @@ Main API entry point.
 
 This file also contains the definition of the flask application that handles Http requests.
 """
-# Pylint does not recognize the predict() function as being used - so switch this check off in this module.
-# pylint: disable=unused-variable
 
 # System imports
 import logging
@@ -14,11 +12,10 @@ from flask import Flask, json, jsonify, request, make_response
 from flask_cors import CORS
 from flask_restful import Resource, Api, reqparse
 import tensorflow as tf
-import edward.models as edm
 import numpy as np
 
-from blueberry_lib import build_model, predict
-from constants import PHASES, N
+from blueberry_lib import predict, predict_weights, rebuild_model
+from constants import GAMMA_PARAMS, MODEL_FILENAME
 
 LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +37,10 @@ def health():
     })
 
 
-class PredictBlueberry(Resource):
+class PredictBlueberryNumbers(Resource):
+    """
+    Predict the number of blueberries after 7 days that will be ready to harvest.
+    """
 
     @staticmethod
     def post():
@@ -52,34 +52,46 @@ class PredictBlueberry(Resource):
 
         with tf.Session() as new_sess:
             # Restore variables from disk.
-            fname = './posterior.ckpt'
-            loader = tf.train.import_meta_graph(fname + '.meta')
-            loader.restore(new_sess, fname)
+            loader = tf.train.import_meta_graph(MODEL_FILENAME + '.meta')
+            loader.restore(new_sess, MODEL_FILENAME)
             graph = tf.get_default_graph()
 
-            # Create model
-            inputs, shifts, grow, outputs = build_model()
-
-            # populate with reloaded data
-            q_grow = edm.Normal(loc=graph.get_tensor_by_name('posterior/Normal/loc:0'),
-                                scale=graph.get_tensor_by_name('posterior/Normal/scale:0'), sample_shape=[N])
-            latent_vars = [0] * PHASES
-            input_ph = [0] * PHASES
-            for i in range(PHASES):
-                input_ph[i] = tf.placeholder(tf.float32, shape=[N])
-                latent_vars[i] = edm.Normal(loc=graph.get_tensor_by_name('posterior/Normal_' + str(i + 1) + '/loc:0'),
-                                            scale=graph.get_tensor_by_name(
-                                                'posterior/Normal_' + str(i + 1) + '/scale:0'), sample_shape=[N])
-
-            latent_var_dict = {grow[0]: q_grow}
-            latent_var_dict.update({key: value for key, value in zip(shifts, latent_vars)})
+            outputs, latent_var_dict, input_ph = rebuild_model(graph)
 
             predictions = predict(samples, outputs, latent_var_dict, input_ph)
 
         return make_response(jsonify({'predictions': predictions.tolist()}))
 
 
-api.add_resource(PredictBlueberry, '/predict')
+class PredictBlueberryWeight(Resource):
+    """
+    Predict the weights of the blueberries that will be ready to harvest in 7 days.
+    """
+
+    @staticmethod
+    def post():
+        parse = reqparse.RequestParser()
+        parse.add_argument('samples')
+        tf.set_random_seed(10)
+        samples = np.asarray(request.get_json()['samples'])
+
+        with tf.Session() as new_sess:
+            # Restore variables from disk.
+            fname = './test.cpkt'
+            loader = tf.train.import_meta_graph(MODEL_FILENAME + '.meta')
+            loader.restore(new_sess, MODEL_FILENAME)
+            graph = tf.get_default_graph()
+
+            outputs, latent_var_dict, input_ph = rebuild_model(graph)
+
+            predictions = predict_weights(samples, GAMMA_PARAMS, outputs, latent_var_dict, input_ph)
+
+        return make_response(jsonify({'mean_predictions': predictions[0].tolist(),
+                                      'stddev_predictions': predictions[1].tolist()}))
+
+
+api.add_resource(PredictBlueberryNumbers, '/predict_numbers')
+api.add_resource(PredictBlueberryWeight, '/predict_weights')
 
 if __name__ == '__main__':
      app.run(host='0.0.0.0', port=3500)
