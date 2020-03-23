@@ -58,3 +58,6 @@ and expect
 "stddev_predictions":[1.0225498969839848,0.8030288980399618]}
 ```
 in return.
+
+
+An explanation of the modelling choices can be found in `Model training.ipynb`, while the final model is trained in `Final model training.ipynb`

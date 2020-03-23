@@ -48,6 +48,7 @@ class PredictBlueberryNumbers(Resource):
         parse = reqparse.RequestParser()
         parse.add_argument('samples')
         tf.set_random_seed(10)
+        np.random.seed(5)
         samples = np.asarray(request.get_json()['samples'])
 
         with tf.Session() as new_sess:
@@ -73,11 +74,11 @@ class PredictBlueberryWeight(Resource):
         parse = reqparse.RequestParser()
         parse.add_argument('samples')
         tf.set_random_seed(10)
+        np.random.seed(5)
         samples = np.asarray(request.get_json()['samples'])
 
         with tf.Session() as new_sess:
             # Restore variables from disk.
-            fname = './test.cpkt'
             loader = tf.train.import_meta_graph(MODEL_FILENAME + '.meta')
             loader.restore(new_sess, MODEL_FILENAME)
             graph = tf.get_default_graph()
